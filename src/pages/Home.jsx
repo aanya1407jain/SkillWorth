@@ -3,10 +3,18 @@ import { useResume } from '../hooks/useResume';
 import Roadmap from '../components/Roadmap';
 import SkillCard from '../components/SkillCard';
 import ResumeScore from '../components/ResumeScore';
-import { Upload, CheckCircle, BookOpen, ExternalLink, Terminal, ShieldCheck, DollarSign, Linkedin, RefreshCcw, Cpu } from 'lucide-react';
+import { 
+  Upload, CheckCircle, BookOpen, ExternalLink, Terminal, 
+  ShieldCheck, Linkedin, RefreshCcw, Cpu, MessageSquareCode, Layers 
+} from 'lucide-react';
 
 const Home = () => {
-  const { scanFile, skills, missingSkills, suggestedRole, salary, isScanning, atsScore, mentorTips } = useResume();
+  // Destructuring the original and the new state variables from your hook
+  const { 
+    scanFile, skills, missingSkills, suggestedRole, salary, 
+    isScanning, atsScore, mentorTips, mockQuestions, comparisons 
+  } = useResume();
+
   const [logs, setLogs] = useState([
     "[SYSTEM] SKILLWORTH_KERNEL_v4.0_LOADED", 
     "[NETWORK] SECURE_CONNECTION_ESTABLISHED"
@@ -49,7 +57,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* UPLOAD_ZONE (Light Blue + Black Text) */}
+        {/* UPLOAD_ZONE */}
         {!skills.length ? (
           <label 
             className="neo-brutal p-12 flex flex-col items-center justify-center border-dashed border-8 border-black cursor-pointer group hover:scale-[1.02] transition-all duration-300 shadow-neo"
@@ -75,7 +83,7 @@ const Home = () => {
           </div>
         )}
 
-        {/* AI MENTOR TERMINAL (Restored Full Logs) */}
+        {/* AI MENTOR TERMINAL */}
         <div className="neo-brutal bg-black p-4 h-48 overflow-y-auto font-mono text-[10px] text-hack-green border-zinc-800 scrollbar-hide shadow-neo">
           <div className="flex items-center gap-2 mb-3 border-b border-zinc-800 pb-2 tracking-[0.2em]">
             <Terminal size={14}/> AI_MENTOR_FEEDBACK
@@ -106,7 +114,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* RIGHT COLUMN: ROADMAP & RESOURCES */}
+      {/* RIGHT COLUMN: ROADMAP & ENHANCEMENTS */}
       <div className="lg:col-span-7 space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-3xl font-black uppercase tracking-tighter italic">Career_Roadmap_v4.2</h2>
@@ -118,6 +126,51 @@ const Home = () => {
         </div>
 
         <Roadmap foundSkills={skills} missingSkills={missingSkills} role={suggestedRole} />
+
+        {/* NEW FEATURE: MULTI-ROLE COMPARISON */}
+        {comparisons && comparisons.length > 0 && (
+          <div className="neo-brutal p-6 bg-zinc-900 border-hack-yellow shadow-[8px_8px_0px_#fbbf24]">
+            <h3 className="text-xl font-black mb-4 text-hack-yellow flex items-center gap-2 uppercase">
+              <Layers size={20}/> Compatibility_Matrix:
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {comparisons.map((item, i) => (
+                <div key={i} className="border-2 border-black p-3 bg-black/50">
+                  <div className="flex justify-between text-[10px] font-mono mb-1">
+                    <span className="text-white opacity-60">{item.role}</span>
+                    <span className={item.score > 50 ? "text-hack-green" : "text-red-500"}>{item.score}%</span>
+                  </div>
+                  <div className="w-full bg-zinc-800 h-2 border border-black">
+                    <div className="h-full bg-hack-yellow transition-all duration-1000" style={{ width: `${item.score}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* NEW FEATURE: INTERACTIVE MOCK INTERVIEW */}
+        {mockQuestions && mockQuestions.length > 0 && (
+          <div className="neo-brutal p-6 bg-black text-white border-hack-green shadow-[8px_8px_0px_#00ff41]">
+            <h3 className="text-xl font-black mb-6 text-hack-green flex items-center gap-2 uppercase tracking-widest">
+              <MessageSquareCode size={24}/> Interview_Engine:
+            </h3>
+            <div className="space-y-4">
+              {mockQuestions.map((q, i) => (
+                <div key={i} className="p-4 border-2 border-zinc-800 bg-zinc-900/40 font-mono">
+                  <p className="text-hack-green text-[10px] mb-2 uppercase">TARGET: {q.skill}</p>
+                  <p className="text-sm italic mb-3">"{q.question}"</p>
+                  <details className="cursor-pointer group">
+                    <summary className="text-[10px] text-hack-blue underline uppercase list-none">[ REVEAL_HINT ]</summary>
+                    <p className="text-[11px] opacity-70 bg-black p-3 border border-dashed border-hack-blue/30 mt-2">
+                      {q.hint}
+                    </p>
+                  </details>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* RESTORED TRAINING MODULES (YouTube + Docs) */}
         {missingSkills.length > 0 && (
