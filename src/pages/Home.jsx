@@ -19,6 +19,20 @@ const Home = () => {
   const [quizRunning, setQuizRunning] = useState(false);
   const [answers, setAnswers] = useState({});
   const [quizResult, setQuizResult] = useState(null);
+  const [userName, setUserName] = useState("Developer"); // Dynamic fallback
+
+  // NEW: Logic to extract name from PDF filename if parsing is unavailable
+  const handleFileUpload = (file) => {
+    if (file) {
+      // Logic: Clean the filename to get a name (e.g., "Aanya_Resume.pdf" -> "Aanya")
+      const extractedName = file.name
+        .split(/[_-]|[Rr]esume|[Cc]v|\./)[0] 
+        .replace(/([A-Z])/g, ' $1').trim(); // Add space before capitals
+      
+      setUserName(extractedName || "Developer");
+      scanFile(file);
+    }
+  };
 
   // FEATURE: PULL-TO-REFRESH FOR MOBILE
   useEffect(() => {
@@ -91,7 +105,7 @@ const Home = () => {
 
         {!skills.length ? (
           <label className="neo-brutal p-8 lg:p-12 flex flex-col items-center justify-center border-dashed border-4 lg:border-8 border-black cursor-pointer bg-hack-blue shadow-[4px_4px_0px_black] lg:shadow-neo">
-            <input type="file" className="hidden" accept=".pdf" onChange={(e) => scanFile(e.target.files[0])} />
+            <input type="file" className="hidden" accept=".pdf" onChange={(e) => handleFileUpload(e.target.files[0])} />
             <Upload size={48} className={`mb-4 lg:w-16 lg:h-16 ${isScanning ? 'animate-bounce text-black' : 'text-black'}`} />
             <span className="font-black text-xl lg:text-2xl uppercase text-black text-center">{isScanning ? "SCANNING..." : "UPLOAD_RESUME"}</span>
           </label>
@@ -112,11 +126,10 @@ const Home = () => {
         </div>
 
         <div className="neo-brutal p-4 lg:p-6 border-4 border-black shadow-[4px_4px_0px_black] lg:shadow-neo" style={{ backgroundColor: '#1a1a1a' }}>
-           <h3 className="font-bold mb-4 flex items-center gap-2 text-hack-green uppercase tracking-tighter text-sm lg:text-base"><CheckCircle size={18}/> Detected_Inventory:</h3>
-           {/* Mobile horizontal swipe, Desktop wrap */}
-           <div className="flex lg:flex-wrap overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-2 scrollbar-hide snap-x">
-             {skills.length > 0 ? skills.map(s => <div key={s} className="snap-center shrink-0"><SkillCard name={s} /></div>) : <p className="text-[10px] opacity-40 uppercase">Awaiting_Packet...</p>}
-           </div>
+            <h3 className="font-bold mb-4 flex items-center gap-2 text-hack-green uppercase tracking-tighter text-sm lg:text-base"><CheckCircle size={18}/> Detected_Inventory:</h3>
+            <div className="flex lg:flex-wrap overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-2 scrollbar-hide snap-x">
+              {skills.length > 0 ? skills.map(s => <div key={s} className="snap-center shrink-0"><SkillCard name={s} /></div>) : <p className="text-[10px] opacity-40 uppercase">Awaiting_Packet...</p>}
+            </div>
         </div>
       </div>
 
@@ -125,7 +138,8 @@ const Home = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <h2 className="text-2xl lg:text-3xl font-black uppercase italic tracking-tighter">Career_Roadmap_v4.2</h2>
           <div className="flex gap-2 w-full lg:w-auto">
-            {skills.length > 0 && <button onClick={() => generatePortfolio("Aanya")} className="flex-1 lg:flex-none justify-center neo-brutal bg-white text-black px-4 py-3 lg:py-2 text-[10px] font-black flex items-center gap-2 hover:bg-hack-blue"><Code2 size={14}/> GENERATE_PORTFOLIO</button>}
+            {/* UPDATED: Dynamic userName instead of "Aanya" */}
+            {skills.length > 0 && <button onClick={() => generatePortfolio(userName)} className="flex-1 lg:flex-none justify-center neo-brutal bg-white text-black px-4 py-3 lg:py-2 text-[10px] font-black flex items-center gap-2 hover:bg-hack-blue"><Code2 size={14}/> GENERATE_PORTFOLIO</button>}
             {skills.length > 0 && <button onClick={shareOnLinkedin} className="flex-1 lg:flex-none justify-center neo-brutal bg-[#0077b5] text-white px-4 py-3 lg:py-2 text-[10px] font-black flex items-center gap-2 hover:bg-[#005885]"><Linkedin size={14}/> SHARE</button>}
           </div>
         </div>
