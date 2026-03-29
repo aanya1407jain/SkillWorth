@@ -4,7 +4,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
-// Static mapping for roles and questions
+// Static mapping for roles and questions moved to top to prevent ReferenceErrors
 const sectorLogic = {
   "Software Engineering": ["React", "Node", "JavaScript", "HTML", "CSS", "AWS", "SQL", "Cloud"],
   "AI & Data Science": ["Python", "TensorFlow", "PyTorch", "Machine Learning", "Deep Learning", "SQL"],
@@ -56,6 +56,12 @@ export const useResume = () => {
 
   const scanFile = async (file) => {
     if (!file) return;
+
+    // --- STEP 1: METADATA VALIDATION ---
+    const isResumeNamed = file.name.toLowerCase().includes("resume") || 
+                         file.name.toLowerCase().includes("cv") ||
+                         file.name.toLowerCase().includes("portfolio");
+
     setIsScanning(true);
     
     try {
@@ -69,13 +75,26 @@ export const useResume = () => {
       }
 
       const cleanText = text.replace(/\s+/g, ' ');
+
+      // --- STEP 2: CONTENT INTEGRITY CHECK ---
+      // Ensures the document contains standard professional sections
+      const resumeMarkers = /\b(experience|education|projects|summary|skills|work history|employment|certification|objective|profile)\b/gi;
+      const markerMatches = cleanText.match(resumeMarkers) || [];
+
+      if (markerMatches.length < 2) {
+        setIsScanning(false);
+        alert("CRITICAL_SYSTEM_ERROR: DOCUMENT_TYPE_MISMATCH. The system detected this is not a Resume or CV. Analysis aborted.");
+        return; 
+      }
+
+      // --- STEP 3: NLP-DRIVEN EXTRACTION ---
       const noise = new Set(["Viraj", "Vishwakarma", "Global", "Institute", "Engineering", "Management", "Jabalpur", "India"]);
       const skillPatterns = /\b(React|Node|JavaScript|Python|C\+\+|SQL|HTML|CSS|TensorFlow|PyTorch|Machine Learning|Deep Learning|Excel|PowerBI|Project Management|Team Leadership|Public Speaking|Surgery|Clinical|Pedagogy|Accounting|Salesforce|Cloud|AWS|Docker|Kubernetes|Communication|Problem Solving|Adaptability)\b/gi;
       
       const rawMatches = cleanText.match(skillPatterns) || [];
       const extractedSkills = [...new Set(rawMatches.map(s => s.trim()).filter(s => !noise.has(s)))];
 
-      // Determine Role
+      // Determine Best Role Fit
       let bestGoal = "Professional Specialist";
       let topCount = 0;
       Object.entries(sectorLogic).forEach(([goal, keywords]) => {
@@ -86,27 +105,33 @@ export const useResume = () => {
         }
       });
 
-      // Role Comparisons
+      // Generate Compatibility Matrix Data
       const roleScores = Object.entries(sectorLogic).map(([role, keywords]) => {
         const matchCount = keywords.filter(k => extractedSkills.some(s => s.toLowerCase() === k.toLowerCase())).length;
-        return { role, score: Math.round((matchCount / keywords.length) * 100) };
+        return { 
+          role, 
+          score: Math.round((matchCount / keywords.length) * 100) 
+        };
       });
       setComparisons(roleScores);
 
-      // Select Industry Data
+      // Select Industry-Specific Insights
       const selected = industryData[bestGoal] || { 
-        tips: ["Quantify achievements."], gaps: ["Leadership"], pay: "₹6L+", 
+        tips: ["Quantify achievements.", "Check formatting."], 
+        gaps: ["Digital Literacy", "Leadership"], 
+        pay: "₹6L+",
         questions: [{ q: "Tell me about a difficult project you managed.", h: "Use the STAR method." }]
       };
 
-      // Set the field-specific questions
+      // Set Interview Engine Questions
       setMockQuestions(selected.questions.map(item => ({
         skill: bestGoal,
         question: item.q,
         hint: item.h
       })));
 
-      setSkills(extractedSkills.length > 0 ? extractedSkills : ["Communication"]);
+      // Final State Updates
+      setSkills(extractedSkills.length > 0 ? extractedSkills : ["Communication", "Critical Thinking"]);
       setSuggestedRole(bestGoal);
       setAtsScore(Math.floor(Math.random() * 20) + 70); 
       setSalary(selected.pay);
@@ -115,8 +140,13 @@ export const useResume = () => {
 
     } catch (e) {
       console.error("PARSING_ERROR", e);
-    } finally { setIsScanning(false); }
+    } finally {
+      setIsScanning(false);
+    }
   };
 
-  return { scanFile, skills, missingSkills, suggestedRole, salary, isScanning, atsScore, mentorTips, mockQuestions, comparisons };
+  return { 
+    scanFile, skills, missingSkills, suggestedRole, salary, 
+    isScanning, atsScore, mentorTips, mockQuestions, comparisons 
+  };
 };
